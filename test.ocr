@@ -1,0 +1,21 @@
+from paddleocr import PaddleOCR
+from PIL import Image
+import requests, io
+
+# 1. Initialize model (downloads lightweight weights automatically on first run)
+ocr = PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False, show_log=False)
+
+# 2. Load a sample product label image
+url = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Ingredients_label.jpg/800px-Ingredients_label.jpg"
+img = Image.open(io.BytesIO(requests.get(url).content))
+
+# 3. Run OCR
+result = ocr.ocr(img, cls=True)
+
+# 4. Print extracted text + confidence
+if result and result[0]:
+    for line in result[0]:
+        text, conf = line[1]
+        print(f"{text}  (confidence: {conf:.2f})")
+else:
+    print("No text detected.")

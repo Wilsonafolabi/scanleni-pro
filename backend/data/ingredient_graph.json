@@ -1,0 +1,174 @@
+{
+  "nodes": {
+    "parabens": {
+      "category": "preservative",
+      "risk": "high",
+      "effects": [
+        "endocrine_disruption",
+        "skin_irritation"
+      ]
+    },
+    "endocrine_disruption": {},
+    "skin_irritation": {},
+    "retinol": {
+      "category": "active",
+      "risk": "moderate",
+      "effects": [
+        "photosensitivity",
+        "anti_aging"
+      ]
+    },
+    "photosensitivity": {},
+    "anti_aging": {},
+    "fragrance": {
+      "category": "additive",
+      "risk": "moderate",
+      "effects": [
+        "allergen",
+        "respiratory_irritation"
+      ]
+    },
+    "allergen": {},
+    "respiratory_irritation": {},
+    "niacinamide": {
+      "category": "active",
+      "risk": "low",
+      "effects": [
+        "barrier_repair",
+        "anti_inflammatory"
+      ]
+    },
+    "barrier_repair": {},
+    "anti_inflammatory": {},
+    "sodium_lauryl_sulfate": {
+      "category": "surfactant",
+      "risk": "moderate",
+      "effects": [
+        "barrier_stripping",
+        "acne_trigger"
+      ]
+    },
+    "barrier_stripping": {},
+    "acne_trigger": {},
+    "alcohol_denat": {
+      "category": "solvent",
+      "risk": "moderate",
+      "effects": [
+        "drying",
+        "barrier_disruption"
+      ]
+    },
+    "drying": {},
+    "barrier_disruption": {},
+    "mineral_oil": {
+      "category": "emollient",
+      "risk": "moderate",
+      "effects": [
+        "comedogenic",
+        "occlusive"
+      ]
+    },
+    "comedogenic": {},
+    "occlusive": {}
+  },
+  "edges": [
+    [
+      "parabens",
+      "endocrine_disruption",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "parabens",
+      "skin_irritation",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "retinol",
+      "photosensitivity",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "retinol",
+      "anti_aging",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "fragrance",
+      "allergen",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "fragrance",
+      "respiratory_irritation",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "niacinamide",
+      "barrier_repair",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "niacinamide",
+      "anti_inflammatory",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "sodium_lauryl_sulfate",
+      "barrier_stripping",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "sodium_lauryl_sulfate",
+      "acne_trigger",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "alcohol_denat",
+      "drying",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "alcohol_denat",
+      "barrier_disruption",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "mineral_oil",
+      "comedogenic",
+      {
+        "relation": "causes"
+      }
+    ],
+    [
+      "mineral_oil",
+      "occlusive",
+      {
+        "relation": "causes"
+      }
+    ]
+  ]
+}

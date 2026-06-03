@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports: ["8000:8000"]
+    env_file: .env
+    depends_on: [redis, db]
+    volumes: ["./backend/app:/app/app"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scanleni
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes: ["./frontend:/app"]
+    ports: ["3000:3000"]
+    command: sh -c "npm install && npm run dev -- --host"
+volumes:
+  pgdata:

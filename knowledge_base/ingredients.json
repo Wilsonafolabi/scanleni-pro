@@ -1,0 +1,10 @@
+[
+  {"ingredient": "red 40", "description": "Artificial dye linked to hyperactivity and allergic reactions.", "risk_level": "high"},
+  {"ingredient": "high fructose corn syrup", "description": "Highly processed sweetener linked to metabolic issues.", "risk_level": "high"},
+  {"ingredient": "parabens", "description": "Preservatives that may disrupt endocrine function.", "risk_level": "moderate"},
+  {"ingredient": "sodium benzoate", "description": "Preservative that can form benzene in acidic conditions.", "risk_level": "moderate"},
+  {"ingredient": "msg", "description": "Flavor enhancer that may cause sensitivities in some users.", "risk_level": "low"},
+  {"ingredient": "potassium sorbate", "description": "Common preservative, generally recognized as safe.", "risk_level": "low"},
+  {"ingredient": "xanthan gum", "description": "Natural thickener derived from fermentation.", "risk_level": "safe"},
+  {"ingredient": "citric acid", "description": "Natural preservative and flavor enhancer.", "risk_level": "safe"}
+]

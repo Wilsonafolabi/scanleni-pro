@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>scanleni-pro Live Test</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #0f1115; color: #e6e6e6; }
+  h1 { color: #00e599; }
+  .controls { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  button, input[type="file"] { padding: 0.6rem 1rem; background: #1a1d24; color: #fff; border: 1px solid #333; border-radius: 6px; cursor: pointer; }
+  button:hover { background: #252a33; }
+  .preview-container { position: relative; width: 100%; max-width: 500px; margin-bottom: 1rem; }
+  #preview { width: 100%; border-radius: 8px; display: block; }
+  #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .results { background: #15181e; padding: 1rem; border-radius: 8px; margin-top: 1rem; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem; max-height: 400px; overflow-y: auto; }
+  .status { padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; font-weight: bold; }
+  .safe { background: #003322; color: #00e599; }
+  .warning { background: #332200; color: #ffcc00; }
+  .danger { background: #330000; color: #ff4444; }
+</style>
+</head>
+<body>
+<h1>scanleni-pro Live AR Test</h1>
+<div class="controls">
+  <input type="file" id="fileInput" accept="image/*">
+  <button id="scanBtn">Scan Image</button>
+</div>
+<div class="preview-container">
+  <img id="preview" src="" alt="Upload an image">
+  <canvas id="overlay"></canvas>
+</div>
+<div id="statusBox" class="status" style="display:none;"></div>
+<div class="results" id="jsonOutput">Upload a product label and click Scan.</div>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/scan";
+const fileInput = document.getElementById("fileInput");
+const scanBtn = document.getElementById("scanBtn");
+const preview = document.getElementById("preview");
+const overlay = document.getElementById("overlay");
+const jsonOutput = document.getElementById("jsonOutput");
+const statusBox = document.getElementById("statusBox");
+
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const url = URL.createObjectURL(file);
+    preview.src = url;
+    preview.onload = () => {
+      overlay.width = preview.clientWidth;
+      overlay.height = preview.clientHeight;
+    };
+  }
+});
+
+scanBtn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) return alert("Select an image first.");
+  
+  scanBtn.disabled = true;
+  scanBtn.textContent = "Processing...";
+  jsonOutput.textContent = "Running OCR + RAG + AI Pipeline...";
+  
+  const formData = new FormData();
+  formData.append("file", file);
+  
+  try {
+    const res = await fetch(API_URL, { method: "POST", body: formData });
+    const data = await res.json();
+    
+    jsonOutput.textContent = JSON.stringify(data, null, 2);
+    
+    // Draw AR overlays
+    const ctx = overlay.getContext("2d");
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
+    const scaleX = overlay.width / preview.naturalWidth;
+    const scaleY = overlay.height / preview.naturalHeight;
+    
+    data.ocr_data.forEach(block => {
+      const pts = block.bbox.points;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] * scaleX, pts[0][1] * scaleY);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * scaleX, pts[i][1] * scaleY);
+      ctx.closePath();
+      ctx.strokeStyle = block.is_harmful ? "#ff4444" : "#00e599";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+    
+    // Status badge
+    statusBox.style.display = "block";
+    statusBox.className = "status " + data.ai_analysis.safety_status.toLowerCase();
+    statusBox.textContent = `${data.ai_analysis.safety_status} | Health Score: ${data.gamification.health_score}/100 | ${data.ai_analysis.summary}`;
+    
+  } catch (err) {
+    jsonOutput.textContent = "Error: " + err.message;
+  } finally {
+    scanBtn.disabled = false;
+    scanBtn.textContent = "Scan Image";
+  }
+});
+</script>
+</body>
+</html>
