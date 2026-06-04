@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 const API = axios.create({ baseURL: 'https://emeritus-21-scanleni-pro.hf.space/api/v1' });
 let lastScanContext = '';
 let videoStream: MediaStream | null = null;
@@ -27,7 +28,8 @@ export function initApp() {
 
   fileInput.addEventListener('change', (e) => {
     if (isCameraActive) stopCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle);
-    const file = e.target.files?.[0];
+    const target = e.target as HTMLInputElement; // ✅ FIXED TypeScript error here
+    const file = target.files?.[0];              // ✅ FIXED TypeScript error here
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -132,7 +134,6 @@ function drawBox(ctx: CanvasRenderingContext2D, b: any, scale: number, offsetX: 
   ctx.lineWidth = 2.5;
   ctx.stroke();
   
-  // Add confidence label
   ctx.fillStyle = b.is_harmful ? 'rgba(255,68,68,0.8)' : 'rgba(0,229,153,0.8)';
   ctx.font = '12px system-ui';
   ctx.fillRect(pts[0][0] * scale + offsetX, pts[0][1] * scale + offsetY - 18, 60, 16);

@@ -9,7 +9,10 @@ export function renderDashboard(container: HTMLElement, score: number, trends: a
     </div>
   `;
 
-  new Chart(container.querySelector('#scoreChart')!, {
+  // ✅ FIX: Cast to HTMLCanvasElement so Chart.js accepts it
+  const canvas = container.querySelector('#scoreChart') as HTMLCanvasElement;
+
+  new Chart(canvas, {
     type: 'doughnut',
     data: {
       labels: ['Safe', 'Flagged'],
@@ -24,10 +27,16 @@ export function renderDashboard(container: HTMLElement, score: number, trends: a
     options: {
       responsive: true,
       cutout: '70%',
-      plugins: { legend: { display: false }, tooltip: { enabled: false } }
+      plugins: { 
+        legend: { display: false }, 
+        tooltip: { enabled: false } 
+      }
     }
   });
 
-  const insightEl = document.getElementById('trendInsight')!;
-  insightEl.textContent = trends?.insight || 'Scan more to unlock insights.';
+  // ✅ FIX: Added safe check and type cast for trendInsight
+  const insightEl = document.getElementById('trendInsight') as HTMLElement;
+  if (insightEl) {
+    insightEl.textContent = trends?.insight || 'Scan more to unlock insights.';
+  }
 }
