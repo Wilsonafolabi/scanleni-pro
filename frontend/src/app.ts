@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API = axios.create({ baseURL: '/api/v1' });
+const API = axios.create({ baseURL: 'https://emeritus-21-scanleni-pro.hf.space/api/v1' });
 let lastScanContext = '';
 let videoStream: MediaStream | null = null;
 let isCameraActive = false;
