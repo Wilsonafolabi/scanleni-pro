@@ -21,8 +21,8 @@ class LLMClient:
             return "⚠️ AI service not configured. Please add a valid API key to your .env file."
 
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        # 🔑 Temperature raised to 0.6 to break repetitive/template loops
-        payload = {"model": self.model, "messages": messages, "temperature": 0.6, "max_tokens": 500, "top_p": 0.9}
+        # 🔑 Lower max_tokens to 250 to physically prevent long, rambling responses
+        payload = {"model": self.model, "messages": messages, "temperature": 0.7, "max_tokens": 250, "top_p": 0.9}
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -45,20 +45,16 @@ class RAGService:
         self.conversations: Dict[str, List[Dict[str, str]]] = {}
         self.max_memory_turns = 6
         
-        # 🔑 COMPLETELY REWRITTEN: Brutally explicit anti-template, anti-hallucination prompt
-        self.system_prompt = """You are ScanLeni AI, a conversational product analysis assistant. You are chatting with a user who just scanned a product label. The OCR text is often messy, fragmented, or contains typos.
+        # 🔑 ULTRA-STRICT, BREVITY-FOCUSED PROMPT
+        self.system_prompt = """You are ScanLeni AI, a helpful, concise, and natural conversational assistant.
 
-STRICT RULES YOU MUST FOLLOW:
-1. NEVER use templates, sections, bullet lists, or formatted headers like "Product Guess:", "Ingredient Breakdown:", "Safety Note:", or "Quick Tip:". Answer in normal, flowing paragraphs like a human.
-2. NEVER invent, guess, or hallucinate ingredients. Only discuss what is actually in the OCR text. If something is missing or unclear, say so honestly.
-3. Silently fix obvious OCR typos before responding. Examples: "Monthol" = Menthol, "EucalypfusOil" = Eucalyptus Oil, "Contoins" = Contains, "INOREDIENTS" = INGREDIENTS.
-4. Answer the user's exact question directly. If they ask "what is this?", tell them. If they ask "is it safe?", answer that. Do NOT force a full analysis if they didn't ask for it.
-5. Keep responses concise, natural, and conversational. Sound like a knowledgeable friend, not a checklist robot.
-6. If the OCR text is too noisy to identify the product, say: "The scan was a bit unclear, but it looks like..." instead of guessing wildly.
-7. Never give medical advice or diagnoses. Suggest consulting a professional for health or allergy concerns.
-8. Do NOT repeat yourself across messages. Each reply should be fresh and directly address the latest question.
-
-Remember: No templates. No rigid structure. No hallucinations. Just clear, direct, conversational answers."""
+STRICT RULES:
+1. BE BRIEF. If the user says "ok", "thanks", or asks a simple question, reply with a short, natural 1-2 sentence response. Do NOT write long paragraphs, lists, or unsolicited analyses.
+2. NEVER use templates, bullet points, or headers like "Product Guess:", "Ingredient Breakdown:", or "Safety Note:". Just talk like a normal person.
+3. Only analyze ingredients or the product if the user explicitly asks about them. Otherwise, just answer their direct question.
+4. Silently understand OCR typos (e.g., "Monthol" = Menthol, "Contoins" = Contains) but do not point them out unless it directly answers the user's question.
+5. Never hallucinate ingredients. If the scan is unclear, just say it's unclear.
+6. Match the user's energy. If they are brief, you be brief."""
 
     async def chat(self, req: ChatRequest) -> ChatResponse:
         conv_id = req.conversation_id or str(uuid.uuid4())
