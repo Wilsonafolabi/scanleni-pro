@@ -28,8 +28,8 @@ export function initApp() {
 
   fileInput.addEventListener('change', (e) => {
     if (isCameraActive) stopCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle);
-    const target = e.target as HTMLInputElement; // ✅ FIXED TypeScript error here
-    const file = target.files?.[0];              // ✅ FIXED TypeScript error here
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -60,7 +60,7 @@ export function initApp() {
       if (lastScanContext) payload.context_product = `Scanned ingredients: ${lastScanContext}`;
       const { data } = await API.post('/chat/', payload);
       appendChat('ai', data.reply);
-    } catch { appendChat('ai', 'AI service unavailable. Check Groq key.'); }
+    } catch { appendChat('ai', 'AI service unavailable. Check API key.'); }
   });
 }
 
@@ -184,6 +184,17 @@ async function runScan(file: File, canvas: HTMLCanvasElement, ctx: CanvasRenderi
     const { data } = await API.post('/scan/', formData);
     lastScanContext = data.ocr_data.map((b: any) => b.text).join(', ');
     lastBoxes = data.ocr_data;
+    
+    // 🔑 NEW: Display Product Identification
+    const identityBox = document.getElementById('productIdentity') as HTMLDivElement;
+    if (data.product_name) {
+      document.getElementById('detectedProductName')!.textContent = data.product_name;
+      document.getElementById('detectedProductBrand')!.textContent = data.brand || 'Unknown Brand';
+      document.getElementById('detectedProductCategory')!.textContent = data.category || 'Uncategorized';
+      identityBox.classList.remove('d-none');
+    } else {
+      identityBox.classList.add('d-none');
+    }
     
     if (!isCam && currentImage) drawBaseImage(canvas, ctx, currentImage);
     
