@@ -13,7 +13,7 @@ export function initApp() {
   const fileInput = document.getElementById('fileInput') as HTMLInputElement;
   const scanBtn = document.getElementById('scanBtn') as HTMLButtonElement;
   const chatInput = document.getElementById('chatInput') as HTMLInputElement;
-  const chatSend = document.getElementById('chatSend') as HTMLButtonElement;
+  const chatSend =icon.getElementById('chatSend') as HTMLButtonElement;
   const chatHistory = document.getElementById('chatHistory') as HTMLDivElement;
   const resultBox = document.getElementById('scanResult') as HTMLDivElement;
   const canvas = document.getElementById('arOverlay') as HTMLCanvasElement;
@@ -22,12 +22,13 @@ export function initApp() {
   const camToggle = document.getElementById('camToggle') as HTMLButtonElement;
   const uploadToggle = document.getElementById('uploadToggle') as HTMLButtonElement;
   const camStatus = document.getElementById('camStatus') as HTMLDivElement;
+  const scanGuide = document.getElementById('scanGuide') as HTMLDivElement;
 
-  camToggle.addEventListener('click', () => startCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle));
-  uploadToggle.addEventListener('click', () => stopCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle));
+  camToggle.addEventListener('click', () => startCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle, scanGuide));
+  uploadToggle.addEventListener('click', () => stopCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle, scanGuide));
 
   fileInput.addEventListener('change', (e) => {
-    if (isCameraActive) stopCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle);
+    if (isCameraActive) stopCamera(video, canvas, ctx, camStatus, camToggle, uploadToggle, scanGuide);
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];
     if (!file) return;
@@ -67,13 +68,14 @@ export function initApp() {
   });
 }
 
-async function startCamera(video: HTMLVideoElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, status: HTMLDivElement, camBtn: HTMLButtonElement, uploadBtn: HTMLButtonElement) {
+async function startCamera(video: HTMLVideoElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, status: HTMLDivElement, camBtn: HTMLButtonElement, uploadBtn: HTMLButtonElement, guide: HTMLDivElement) {
   try {
     videoStream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
+      video: { facingMode: 'environment', width: { ideal:1280 }, height: { ideal: 720 } } 
     });
     video.srcObject = videoStream;
     video.classList.remove('d-none');
+    guide.classList.remove('d-none'); // Show scan guide
     isCameraActive = true;
     status.textContent = 'Camera On • Hold Steady';
     status.className = 'position-absolute top-0 start-0 m-2 badge bg-success';
@@ -92,13 +94,14 @@ async function startCamera(video: HTMLVideoElement, canvas: HTMLCanvasElement, c
   }
 }
 
-function stopCamera(video: HTMLVideoElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, status: HTMLDivElement, camBtn: HTMLButtonElement, uploadBtn: HTMLButtonElement) {
+function stopCamera(video: HTMLVideoElement, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, status: HTMLDivElement, camBtn: HTMLButtonElement, uploadBtn: HTMLButtonElement, guide: HTMLDivElement) {
   if (videoStream) {
     videoStream.getTracks().forEach(t => t.stop());
     videoStream = null;
   }
   video.srcObject = null;
   video.classList.add('d-none');
+  guide.classList.add('d-none'); // Hide scan guide
   isCameraActive = false;
   status.textContent = 'Camera Off';
   status.className = 'position-absolute top-0 start-0 m-2 badge bg-dark opacity-75';
@@ -166,13 +169,17 @@ async function captureAndScan(canvas: HTMLCanvasElement, ctx: CanvasRenderingCon
   frameCanvas.width = frameWidth;
   frameCanvas.height = frameHeight;
   const fCtx = frameCanvas.getContext('2d')!;
+  
+  // 🔑 CRITICAL FIX: Apply contrast and slight grayscale to remove glare/shadows for OCR
+  fCtx.filter = 'contrast(1.4) grayscale(0.3)';
   fCtx.drawImage(video, 0, 0, frameWidth, frameHeight);
+  fCtx.filter = 'none'; // Reset filter
   
   frameCanvas.toBlob(async (blob) => {
     if (!blob) return;
     const file = new File([blob], 'cam_frame.jpg', { type: 'image/jpeg' });
     await runScan(file, canvas, ctx, btn, resultBox, true);
-  }, 'image/jpeg', 0.85);
+  }, 'image/jpeg', 0.9); // Increased quality to 0.9
 }
 
 async function scanUploadedFile(file: File, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, btn: HTMLButtonElement, resultBox: HTMLDivElement) {
