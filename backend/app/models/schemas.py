@@ -50,8 +50,6 @@ class ARScanResponse(BaseModel):
     gamification: GamificationState
     ai_summary: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    
-    # 🔑 NEW: Product Identification Fields
     product_name: Optional[str] = None
     brand: Optional[str] = None
     category: Optional[str] = None

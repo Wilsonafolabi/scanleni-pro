@@ -1,105 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>scanleni-pro Live Test</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #0f1115; color: #e6e6e6; }
-  h1 { color: #00e599; }
-  .controls { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-  button, input[type="file"] { padding: 0.6rem 1rem; background: #1a1d24; color: #fff; border: 1px solid #333; border-radius: 6px; cursor: pointer; }
-  button:hover { background: #252a33; }
-  .preview-container { position: relative; width: 100%; max-width: 500px; margin-bottom: 1rem; }
-  #preview { width: 100%; border-radius: 8px; display: block; }
-  #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-  .results { background: #15181e; padding: 1rem; border-radius: 8px; margin-top: 1rem; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem; max-height: 400px; overflow-y: auto; }
-  .status { padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; font-weight: bold; }
-  .safe { background: #003322; color: #00e599; }
-  .warning { background: #332200; color: #ffcc00; }
-  .danger { background: #330000; color: #ff4444; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScanLeni AI | Product Intelligence</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/main.css">
 </head>
 <body>
-<h1>scanleni-pro Live AR Test</h1>
-<div class="controls">
-  <input type="file" id="fileInput" accept="image/*">
-  <button id="scanBtn">Scan Image</button>
-</div>
-<div class="preview-container">
-  <img id="preview" src="" alt="Upload an image">
-  <canvas id="overlay"></canvas>
-</div>
-<div id="statusBox" class="status" style="display:none;"></div>
-<div class="results" id="jsonOutput">Upload a product label and click Scan.</div>
+  <nav class="navbar navbar-expand-lg glass-nav sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">ScanLeni AI</a>
+      <div class="ms-auto d-flex gap-2 align-items-center">
+        <a href="#scanner-section" class="btn btn-sm btn-primary">Start Scanning</a>
+        <button class="btn btn-sm btn-outline-light" id="themeToggle">🌓 Theme</button>
+      </div>
+    </div>
+  </nav>
 
-<script>
-const API_URL = "http://127.0.0.1:8000/scan";
-const fileInput = document.getElementById("fileInput");
-const scanBtn = document.getElementById("scanBtn");
-const preview = document.getElementById("preview");
-const overlay = document.getElementById("overlay");
-const jsonOutput = document.getElementById("jsonOutput");
-const statusBox = document.getElementById("statusBox");
+  <header class="py-5 text-center bg-body-tertiary">
+    <div class="container py-5">
+      <h1 class="display-4 fw-bold mb-3">Understand What Is In Your Products</h1>
+      <p class="lead text-body-secondary mb-4 mx-auto" style="max-width: 700px;">
+        Scan packaging, labels, or manuals to instantly extract ingredients, identify the product, assess health risks, and chat with an AI assistant that knows exactly what you are looking at.
+      </p>
+      <a href="#scanner-section" class="btn btn-primary btn-lg px-5">Try It Now</a>
+    </div>
+  </header>
 
-fileInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const url = URL.createObjectURL(file);
-    preview.src = url;
-    preview.onload = () => {
-      overlay.width = preview.clientWidth;
-      overlay.height = preview.clientHeight;
-    };
-  }
-});
+  <section class="py-5">
+    <div class="container">
+      <div class="row g-4 text-center">
+        <div class="col-md-4">
+          <div class="card glass-card p-4 h-100 border-0">
+            <h5 class="fw-bold">📷 Instant OCR Extraction</h5>
+            <p class="text-body-secondary small mb-0">Capture text and ingredients from live camera feeds or uploaded images with high accuracy.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card glass-card p-4 h-100 border-0">
+            <h5 class="fw-bold">🔍 Product Identification</h5>
+            <p class="text-body-secondary small mb-0">AI automatically infers the exact product name, brand, and category based on the extracted label data.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card glass-card p-4 h-100 border-0">
+            <h5 class="fw-bold">🤖 Context-Aware AI Chat</h5>
+            <p class="text-body-secondary small mb-0">Ask questions about specific ingredients, get safer alternatives, and receive personalized health insights.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-scanBtn.addEventListener("click", async () => {
-  const file = fileInput.files[0];
-  if (!file) return alert("Select an image first.");
-  
-  scanBtn.disabled = true;
-  scanBtn.textContent = "Processing...";
-  jsonOutput.textContent = "Running OCR + RAG + AI Pipeline...";
-  
-  const formData = new FormData();
-  formData.append("file", file);
-  
-  try {
-    const res = await fetch(API_URL, { method: "POST", body: formData });
-    const data = await res.json();
-    
-    jsonOutput.textContent = JSON.stringify(data, null, 2);
-    
-    // Draw AR overlays
-    const ctx = overlay.getContext("2d");
-    ctx.clearRect(0, 0, overlay.width, overlay.height);
-    const scaleX = overlay.width / preview.naturalWidth;
-    const scaleY = overlay.height / preview.naturalHeight;
-    
-    data.ocr_data.forEach(block => {
-      const pts = block.bbox.points;
-      ctx.beginPath();
-      ctx.moveTo(pts[0][0] * scaleX, pts[0][1] * scaleY);
-      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0] * scaleX, pts[i][1] * scaleY);
-      ctx.closePath();
-      ctx.strokeStyle = block.is_harmful ? "#ff4444" : "#00e599";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    });
-    
-    // Status badge
-    statusBox.style.display = "block";
-    statusBox.className = "status " + data.ai_analysis.safety_status.toLowerCase();
-    statusBox.textContent = `${data.ai_analysis.safety_status} | Health Score: ${data.gamification.health_score}/100 | ${data.ai_analysis.summary}`;
-    
-  } catch (err) {
-    jsonOutput.textContent = "Error: " + err.message;
-  } finally {
-    scanBtn.disabled = false;
-    scanBtn.textContent = "Scan Image";
-  }
-});
-</script>
+  <section id="scanner-section" class="py-5 bg-body-tertiary">
+    <div class="container">
+      <div class="text-center mb-4">
+        <h2 class="fw-bold">Live Product Scanner</h2>
+        <p class="text-body-secondary">Upload an image or use your camera to begin analysis.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card glass-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Scanner</h5>
+              <div class="btn-group">
+                <button id="camToggle" class="btn btn-sm btn-outline-info">📷 Live Cam</button>
+                <button id="uploadToggle" class="btn btn-sm btn-outline-secondary active">📁 Upload</button>
+              </div>
+            </div>
+            <div class="scan-viewport position-relative">
+              <video id="cameraFeed" autoplay playsinline class="w-100 h-100 d-none"></video>
+              <canvas id="arOverlay" class="w-100 h-100"></canvas>
+              <div id="scanSkeleton" class="skeleton-overlay d-none"></div>
+              <div id="camStatus" class="position-absolute top-0 start-0 m-2 badge bg-dark opacity-75">Camera Off</div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+              <input type="file" id="fileInput" accept="image/*" class="form-control">
+              <button id="scanBtn" class="btn btn-primary">Analyze</button>
+            </div>
+            
+            <div id="productIdentity" class="mt-3 p-3 rounded bg-primary-subtle d-none">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="fw-bold">Detected Product:</span>
+                <span id="detectedProductName" class="fw-bold text-primary"></span>
+                <span id="detectedProductBrand" class="badge bg-secondary"></span>
+              </div>
+              <div class="small text-body-secondary mt-1">
+                Category: <span id="detectedProductCategory"></span>
+              </div>
+            </div>
+
+            <div id="scanResult" class="mt-3 p-3 rounded bg-dark-subtle d-none"></div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card glass-card p-3 mb-3">
+            <h5 class="mb-3">AI Assistant</h5>
+            <div id="chatHistory" class="chat-box mb-3"></div>
+            <div class="input-group">
+              <input type="text" id="chatInput" class="form-control" placeholder="Ask about ingredients...">
+              <button id="chatSend" class="btn btn-success">Send</button>
+            </div>
+          </div>
+          <div class="card glass-card p-3">
+            <h5 class="mb-3">Dashboard</h5>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Health Score</span><span id="healthScore" class="fw-bold">--/100</span>
+            </div>
+            <div class="progress mb-3"><div id="healthBar" class="progress-bar bg-success" style="width:0%"></div></div>
+            <div class="d-flex gap-2 flex-wrap" id="badgesContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-4 text-center text-body-secondary border-top">
+    <div class="container">
+      <small>ScanLeni AI Platform. Built for transparent product intelligence.</small>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

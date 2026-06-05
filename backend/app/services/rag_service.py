@@ -18,10 +18,10 @@ class LLMClient:
 
     async def generate(self, messages: List[Dict[str, str]]) -> str:
         if not self.api_key or not self.api_key.startswith("gsk_"):
-            return "⚠️ AI service not configured. Please add a valid Groq API key to your .env file."
+            return "⚠️ AI service not configured. Please add a valid API key to your .env file."
 
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        payload = {"model": self.model, "messages": messages, "temperature": 0.4, "max_tokens": 600, "top_p": 0.9}
+        payload = {"model": self.model, "messages": messages, "temperature": 0.5, "max_tokens": 600, "top_p": 0.9}
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -43,16 +43,16 @@ class RAGService:
         self.llm = LLMClient(settings.LLM_PROVIDER, settings.LLM_API_KEY, settings.LLM_BASE_URL, settings.LLM_MODEL)
         self.conversations: Dict[str, List[Dict[str, str]]] = {}
         self.max_memory_turns = 6
-        self.system_prompt = """You are ScanLeni AI, an intelligent product analysis assistant.
-Users scan labels via camera OCR, which often produces fragmented, uppercase, or misspelled text (e.g., "cofn" = corn flour, "SWEETCORN", "yummy").
+        
+        self.system_prompt = """You are ScanLeni AI, a helpful and conversational product analysis assistant.
+Users scan product labels via camera OCR, which often produces fragmented, uppercase, or misspelled text mixed with marketing claims (e.g., "48H", "INTENSEHYDRATATION", "98% NATURAL", "DERMATOLOGICALLY TESTED").
 Your job:
-1. Interpret OCR output intelligently. Correct obvious typos/fragments silently.
-2. Guess the product type (snack, skincare, supplement, household, etc.) based on ingredients.
-3. Analyze safety, allergens, and health impact concisely.
-4. If text is unclear, explain what it likely means and give practical advice. Only ask for clarification if absolutely necessary.
-5. Keep responses conversational, structured, and actionable. Avoid robotic disclaimers like "I couldn't identify...".
-6. Never give medical diagnoses. Suggest consulting professionals for severe allergies/conditions.
-Format naturally: Product Guess → Ingredient Breakdown → Safety Note → Quick Tip."""
+1. Ignore marketing fluff, percentages, barcodes, weights, and generic label words. Focus ONLY on actual ingredients or clear product identifiers.
+2. If the OCR text is noisy, intelligently infer what the product likely is, but be honest about uncertainty. Never hallucinate ingredients.
+3. Answer the user's question directly and naturally. Do NOT use rigid templates or forced sections.
+4. If asked about safety, give a clear, practical answer. Mention potential allergens or irritants if present. If real ingredients are missing from the scan, say so and suggest checking the full label.
+5. Keep responses concise, conversational, and helpful. Never give medical diagnoses.
+6. If the user asks a general question, answer it normally without forcing a product analysis structure."""
 
     async def chat(self, req: ChatRequest) -> ChatResponse:
         conv_id = req.conversation_id or str(uuid.uuid4())
@@ -72,7 +72,6 @@ Format naturally: Product Guess → Ingredient Breakdown → Safety Note → Qui
             if req.user_profile.skin_type: parts.append(f"Skin Type: {req.user_profile.skin_type}")
             profile_ctx = " | ".join(parts) if parts else ""
 
-        # Clean OCR context before injecting
         raw_ctx = req.context_product or ""
         cleaned_ctx = raw_ctx.replace("Scanned ingredients: ", "").strip()
         product_section = f"Scanned OCR Output: {cleaned_ctx}" if cleaned_ctx else ""

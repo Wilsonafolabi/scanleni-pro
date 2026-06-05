@@ -34,7 +34,10 @@ export function initApp() {
     const reader = new FileReader();
     reader.onload = (evt) => {
       currentImage = new Image();
-      currentImage.onload = () => drawBaseImage(canvas, ctx, currentImage!);
+      currentImage.onload = () => {
+        drawBaseImage(canvas, ctx, currentImage!);
+        lastBoxes = [];
+      };
       currentImage.src = evt.target?.result as string;
     };
     reader.readAsDataURL(file);
@@ -145,9 +148,11 @@ function drawBaseImage(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
   canvas.width = canvas.clientWidth;
   canvas.height = canvas.clientHeight;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
   const scale = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
   const x = (canvas.width - img.naturalWidth * scale) / 2;
   const y = (canvas.height - img.naturalHeight * scale) / 2;
+  
   ctx.drawImage(img, x, y, img.naturalWidth * scale, img.naturalHeight * scale);
   lastBoxes.forEach(b => drawBox(ctx, b, scale, x, y));
 }
@@ -185,7 +190,10 @@ async function runScan(file: File, canvas: HTMLCanvasElement, ctx: CanvasRenderi
     lastScanContext = data.ocr_data.map((b: any) => b.text).join(', ');
     lastBoxes = data.ocr_data;
     
-    // 🔑 NEW: Display Product Identification
+    if (!isCam && currentImage) {
+      drawBaseImage(canvas, ctx, currentImage);
+    }
+    
     const identityBox = document.getElementById('productIdentity') as HTMLDivElement;
     if (data.product_name) {
       document.getElementById('detectedProductName')!.textContent = data.product_name;
@@ -195,8 +203,6 @@ async function runScan(file: File, canvas: HTMLCanvasElement, ctx: CanvasRenderi
     } else {
       identityBox.classList.add('d-none');
     }
-    
-    if (!isCam && currentImage) drawBaseImage(canvas, ctx, currentImage);
     
     const ingredientsHtml = data.ocr_data.length > 0 
       ? data.ocr_data.map((b: any) => 
